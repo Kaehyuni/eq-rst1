@@ -3,12 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mini Pro-Q EQ Trainer – Multi-band, Touch-Draggable</title>
+  <title>Mini Pro-Q EQ Trainer – Multi-band, Touch-Draggable + Audio Loader</title>
 
   <style>
     :root{
       --bg:#0e0f13; --panel:#171922; --text:#e9ecf1; --muted:#8b90a3;
       --accent:#7aa5ff; --grid:#2a2d39; --zero:#c7cbe0; --curve:#ff5ec9; --node:#ffd257;
+      --ok:#52e5b1; --warn:#ff9157; --error:#e74f78;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -22,17 +23,18 @@
     header .hint{font-size:13px; color:var(--muted)}
 
     .wrap{
-      display:grid; grid-template-columns: 280px 1fr; gap:16px;
+      display:grid; grid-template-columns: 300px 1fr; gap:16px;
       height:calc(100% - 64px); padding:0 16px 16px; min-width:320px;
     }
 
-    /* ===== Control panel (with clipping) ===== */
+    /* ===== Control panel ===== */
     .panel{
       background:linear-gradient(180deg, #171a25 0%, #131620 100%);
       border:1px solid #1f2330; border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:14px;
       box-shadow:0 8px 24px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
       overflow:hidden;
     }
+    .section-title{font-size:12px; color:var(--muted); letter-spacing:.08em; text-transform:uppercase; margin:2px 0 2px}
     .row{display:flex; align-items:center; justify-content:space-between; gap:10px}
     .row label{font-size:13px; color:var(--muted)}
     .readout{font-variant-numeric:tabular-nums; font-weight:600; color:var(--text)}
@@ -43,7 +45,7 @@
     .btn{cursor:pointer}
     .stack{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:14px; margin-top:6px; align-items:start}
 
-    /* ===== Knob (responsive, contained) ===== */
+    /* ===== Knob ===== */
     .knob{
       --size: clamp(64px, 28vw, 90px);
       width:var(--size); height:var(--size); border-radius:50%;
@@ -68,6 +70,30 @@
     .knob-legend{ margin-top:6px; font-size:13px; color:var(--muted)}
     .knob-value{ margin-top:2px; font-size:14px; font-weight:700}
 
+    /* ===== Audio loader ===== */
+    .uploader{
+      border:1px dashed #2c3346; border-radius:10px; padding:10px; background:#141828;
+    }
+    .uploader .actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+    .file-input{ display:none }
+    .file-btn{
+      background:#1b1f2c; border:1px solid #262c3b; border-radius:10px; padding:8px 12px; font-size:13px; cursor:pointer;
+    }
+    .accept-note{font-size:12px; color:var(--muted)}
+    .dropzone{
+      margin-top:8px; padding:10px; border:1px dashed #2a3248; border-radius:8px; text-align:center; font-size:12px; color:var(--muted);
+      background:#121625;
+    }
+    .dropzone.drag{ border-color:var(--accent); color:var(--accent); background:#11193a55 }
+    .filelist{ margin:8px 0 0; padding:0; list-style:none; max-height:110px; overflow:auto; }
+    .filelist li{ font-size:12px; color:var(--text); padding:4px 0; display:flex; justify-content:space-between; gap:8px; border-bottom:1px solid #1f2330 }
+    .filelist small{ color:var(--muted) }
+    .msg{ font-size:12px; margin-top:6px }
+    .msg.ok{ color:var(--ok) }
+    .msg.warn{ color:var(--warn) }
+    .msg.err{ color:var(--error) }
+    audio{ width:100%; margin-top:8px }
+
     /* ===== Graph ===== */
     .stage{
       background:#121520; border:1px solid #1f2330; border-radius:14px; padding:14px; display:flex; flex-direction:column;
@@ -76,7 +102,7 @@
     .stage-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px}
     .stage-header .badge{font-size:12px; color:var(--muted)}
     .graph{ flex:1; position:relative; overflow:hidden; border-radius:10px; background:linear-gradient(180deg, #151926 0%, #111522 100%); }
-    .graph svg{ position:absolute; inset:0; width:100%; height:100%; touch-action:none; } /* finger drags */
+    .graph svg{ position:absolute; inset:0; width:100%; height:100%; touch-action:none; }
 
     .legend{position:absolute; right:10px; top:10px; font-size:12px; color:var(--muted); background:#101320aa; padding:6px 8px; border:1px solid #22283a; border-radius:8px}
 
@@ -97,10 +123,7 @@
 
     /* ===== Per-band mini curves ===== */
     .band-curve{
-      fill:none;
-      stroke-width:2;
-      vector-effect:non-scaling-stroke;
-      stroke-opacity:.35;
+      fill:none; stroke-width:2; vector-effect:non-scaling-stroke; stroke-opacity:.35;
     }
     .band--c0{ stroke:#ff5ec9 }
     .band--c1{ stroke:#7aa5ff }
@@ -123,6 +146,24 @@
   <main class="wrap">
     <!-- ===== Controls ===== -->
     <section class="panel" aria-label="Controls">
+      <!-- AUDIO LOADER -->
+      <div class="section-title">Load Audio</div>
+      <div class="uploader" id="uploader">
+        <div class="actions">
+          <label class="file-btn" for="fileInput">Choose MP3/WAV</label>
+          <input id="fileInput" class="file-input" type="file"
+                 accept=".mp3,.wav,audio/mpeg,audio/wav"
+                 multiple>
+          <span class="accept-note">Accepted: <b>.mp3</b>, <b>.wav</b></span>
+        </div>
+        <div class="dropzone" id="dropzone">Drop MP3/WAV files here</div>
+        <ul class="filelist" id="fileList"></ul>
+        <div class="msg" id="fileMsg"></div>
+        <audio id="player" controls preload="metadata"></audio>
+      </div>
+
+      <!-- FILTER CONTROLS -->
+      <div class="section-title">Filter</div>
       <div class="row">
         <label>Filter Type (selected band)</label>
         <select id="filterType">
@@ -192,15 +233,9 @@
       <div class="graph" id="graph">
         <svg id="svg" viewBox="0 0 1000 520" preserveAspectRatio="none" aria-hidden="true">
           <g id="grid"></g>
-
-          <!-- per-band mini curves (new) -->
           <g id="bandCurves"></g>
-
-          <!-- combined response (top) -->
           <path id="curve" fill="none" stroke="var(--curve)" stroke-width="3" vector-effect="non-scaling-stroke"/>
           <path id="glow"  fill="none" stroke="var(--curve)" stroke-opacity=".25" stroke-width="9" vector-effect="non-scaling-stroke"/>
-
-          <!-- nodes -->
           <g id="nodes"></g>
         </svg>
         <div class="legend">Tip: Alt + drag (or wheel) to change Q • Tap a node to select it</div>
@@ -223,6 +258,11 @@
     };
     const fmtFreq=f=> (f>=1000? (f/1000).toFixed(2)+' kHz' : f.toFixed(0)+' Hz');
     const fmtGain=g=> (g>0? '+' : (g===0? '' : '')) + g.toFixed(1)+' dB';
+    const fmtSize = bytes => {
+      const u = ['B','KB','MB','GB']; let i=0, n=bytes;
+      while(n>=1024 && i<u.length-1){ n/=1024; i++; }
+      return n.toFixed(n<10?1:0)+' '+u[i];
+    };
 
     /* ===== DOM ===== */
     const svg   = document.getElementById('svg');
@@ -250,6 +290,13 @@
     const addBandBtn = document.getElementById('addBandBtn');
     const removeBtn  = document.getElementById('removeBandBtn');
     const resetBtn   = document.getElementById('resetBtn');
+
+    // File loader DOM
+    const fileInput = document.getElementById('fileInput');
+    const dropzone  = document.getElementById('dropzone');
+    const fileList  = document.getElementById('fileList');
+    const fileMsg   = document.getElementById('fileMsg');
+    const player    = document.getElementById('player');
 
     /* ===== graph metrics ===== */
     const PAD_L=50, PAD_R=20, PAD_T=18, PAD_B=26;
@@ -401,10 +448,9 @@
       const angle=(v,min,max)=> (-135 + ((v-min)/(max-min))*270);
       const t=(Math.log10(bands[selected].freq)-Math.log10(FMIN))/(Math.log10(FMAX)-Math.log10(FMIN));
       const tq=(bands[selected].Q - 0.2)/(18-0.2);
-
-      pGain.style.transform = `translate(-50%, -68%) rotate(${angle(bands[selected].gain,-24,24)}deg)`;
-      pFreq.style.transform = `translate(-50%, -68%) rotate(${(-135 + t*270)}deg)`;
-      pQ.style.transform    = `translate(-50%, -68%) rotate(${(-135 + tq*270)}deg)`;
+      document.querySelector('#knobGain .pointer').style.transform = `translate(-50%, -68%) rotate(${angle(bands[selected].gain,-24,24)}deg)`;
+      document.querySelector('#knobFreq .pointer').style.transform = `translate(-50%, -68%) rotate(${(-135 + t*270)}deg)`;
+      document.querySelector('#knobQ .pointer').style.transform    = `translate(-50%, -68%) rotate(${(-135 + tq*270)}deg)`;
     }
 
     function labelFor(type){
@@ -435,7 +481,6 @@
     }
 
     function renderCurve(){
-      // per-band mini curves
       const minis = bands.map((b, i)=>{
         const pts = singleBandResponse(b);
         const d   = pathFromPts(pts);
@@ -444,7 +489,6 @@
       }).join('');
       bandCurvesG.innerHTML = minis;
 
-      // combined on top
       const combinedPts = combinedResponse(bands);
       const dCombined   = pathFromPts(combinedPts);
       curve.setAttribute('d', dCombined);
@@ -565,6 +609,64 @@
       if(rafId!=null) return;
       rafId = requestAnimationFrame(()=>{ rafId=null; render(); });
     }
+
+    /* ===== AUDIO LOADER (MP3/WAV only) ===== */
+    const allowedMimes = new Set(['audio/mpeg','audio/wav','audio/x-wav']);
+    const allowedExts  = new Set(['.mp3','.wav']);
+    let currentURL = null;
+
+    function isAllowed(file){
+      if(allowedMimes.has(file.type)) return true;
+      const dot = file.name.lastIndexOf('.');
+      const ext = dot>=0 ? file.name.slice(dot).toLowerCase() : '';
+      return allowedExts.has(ext);
+    }
+
+    function handleFiles(files){
+      const all = Array.from(files||[]);
+      const good = [], bad = [];
+      all.forEach(f => (isAllowed(f)? good : bad).push(f));
+
+      // List files
+      fileList.innerHTML = good.map(f =>
+        `<li><span>${f.name}</span><small>${fmtSize(f.size)}</small></li>`).join('');
+
+      // Messages
+      if(good.length){
+        fileMsg.className='msg ok';
+        fileMsg.textContent = `${good.length} audio file${good.length>1?'s':''} ready`;
+      }else{
+        fileMsg.className='msg warn';
+        fileMsg.textContent = 'Please choose an MP3 or WAV file.';
+      }
+      if(bad.length){
+        fileMsg.className='msg err';
+        fileMsg.textContent = `Rejected ${bad.length} file${bad.length>1?'s':''}: only MP3/WAV allowed.`;
+      }
+
+      // Load first valid file into the audio player
+      if(good.length){
+        if(currentURL){ URL.revokeObjectURL(currentURL); currentURL=null; }
+        currentURL = URL.createObjectURL(good[0]);
+        player.src = currentURL;
+        player.load();
+      }
+    }
+
+    // input picker
+    fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+    // drag & drop
+    ;['dragenter','dragover'].forEach(ev =>
+      dropzone.addEventListener(ev, (e)=>{ e.preventDefault(); dropzone.classList.add('drag'); }, {passive:false})
+    );
+    ;['dragleave','drop'].forEach(ev =>
+      dropzone.addEventListener(ev, (e)=>{ e.preventDefault(); dropzone.classList.remove('drag'); }, {passive:false})
+    );
+    dropzone.addEventListener('drop', (e)=>{
+      const dt = e.dataTransfer;
+      if(dt && dt.files) handleFiles(dt.files);
+    }, {passive:false});
 
     /* ===== init ===== */
     function init(){ syncKnobsToSelected(); render(); }
