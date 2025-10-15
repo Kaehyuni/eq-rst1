@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mini Pro-Q EQ Trainer – Multi-band, Touch-Draggable + Audio Loader</title>
+  <title>Mini Pro-Q EQ Trainer – Live Audio</title>
 
   <style>
     :root{
@@ -22,10 +22,8 @@
     header h1{font-size:20px; margin:0; letter-spacing:.3px}
     header .hint{font-size:13px; color:var(--muted)}
 
-    .wrap{
-      display:grid; grid-template-columns: 300px 1fr; gap:16px;
-      height:calc(100% - 64px); padding:0 16px 16px; min-width:320px;
-    }
+    .wrap{ display:grid; grid-template-columns: 320px 1fr; gap:16px;
+      height:calc(100% - 64px); padding:0 16px 16px; min-width:320px; }
 
     /* ===== Control panel ===== */
     .panel{
@@ -71,19 +69,12 @@
     .knob-value{ margin-top:2px; font-size:14px; font-weight:700}
 
     /* ===== Audio loader ===== */
-    .uploader{
-      border:1px dashed #2c3346; border-radius:10px; padding:10px; background:#141828;
-    }
+    .uploader{ border:1px dashed #2c3346; border-radius:10px; padding:10px; background:#141828; }
     .uploader .actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
     .file-input{ display:none }
-    .file-btn{
-      background:#1b1f2c; border:1px solid #262c3b; border-radius:10px; padding:8px 12px; font-size:13px; cursor:pointer;
-    }
+    .file-btn{ background:#1b1f2c; border:1px solid #262c3b; border-radius:10px; padding:8px 12px; font-size:13px; cursor:pointer; }
     .accept-note{font-size:12px; color:var(--muted)}
-    .dropzone{
-      margin-top:8px; padding:10px; border:1px dashed #2a3248; border-radius:8px; text-align:center; font-size:12px; color:var(--muted);
-      background:#121625;
-    }
+    .dropzone{ margin-top:8px; padding:10px; border:1px dashed #2a3248; border-radius:8px; text-align:center; font-size:12px; color:var(--muted); background:#121625; }
     .dropzone.drag{ border-color:var(--accent); color:var(--accent); background:#11193a55 }
     .filelist{ margin:8px 0 0; padding:0; list-style:none; max-height:110px; overflow:auto; }
     .filelist li{ font-size:12px; color:var(--text); padding:4px 0; display:flex; justify-content:space-between; gap:8px; border-bottom:1px solid #1f2330 }
@@ -106,41 +97,28 @@
 
     .legend{position:absolute; right:10px; top:10px; font-size:12px; color:var(--muted); background:#101320aa; padding:6px 8px; border:1px solid #22283a; border-radius:8px}
 
-    /* ===== Nodes ===== */
+    /* ===== Nodes / colors ===== */
     .node{ fill:var(--node); stroke:#1c1c1c; stroke-width:1.5; filter: drop-shadow(0 0 4px rgba(255,210,87,.45)); cursor:grab; }
     .node:active{cursor:grabbing}
     .node--selected{ stroke:#000; stroke-width:2.5; filter: drop-shadow(0 0 6px rgba(122,165,255,.6)); }
+    .node--c0 { fill:#ff5ec9 }  .band--c0{ stroke:#ff5ec9 }
+    .node--c1 { fill:#7aa5ff }  .band--c1{ stroke:#7aa5ff }
+    .node--c2 { fill:#9cff57 }  .band--c2{ stroke:#9cff57 }
+    .node--c3 { fill:#f9d84a }  .band--c3{ stroke:#f9d84a }
+    .node--c4 { fill:#ff9157 }  .band--c4{ stroke:#ff9157 }
+    .node--c5 { fill:#b67bff }  .band--c5{ stroke:#b67bff }
+    .node--c6 { fill:#52e5b1 }  .band--c6{ stroke:#52e5b1 }
+    .node--c7 { fill:#e74f78 }  .band--c7{ stroke:#e74f78 }
 
-    /* ===== Colored nodes ===== */
-    .node--c0 { fill:#ff5ec9 }  /* pink */
-    .node--c1 { fill:#7aa5ff }  /* blue */
-    .node--c2 { fill:#9cff57 }  /* lime */
-    .node--c3 { fill:#f9d84a }  /* yellow */
-    .node--c4 { fill:#ff9157 }  /* orange */
-    .node--c5 { fill:#b67bff }  /* purple */
-    .node--c6 { fill:#52e5b1 }  /* aqua */
-    .node--c7 { fill:#e74f78 }  /* red-pink */
-
-    /* ===== Per-band mini curves ===== */
-    .band-curve{
-      fill:none; stroke-width:2; vector-effect:non-scaling-stroke; stroke-opacity:.35;
-    }
-    .band--c0{ stroke:#ff5ec9 }
-    .band--c1{ stroke:#7aa5ff }
-    .band--c2{ stroke:#9cff57 }
-    .band--c3{ stroke:#f9d84a }
-    .band--c4{ stroke:#ff9157 }
-    .band--c5{ stroke:#b67bff }
-    .band--c6{ stroke:#52e5b1 }
-    .band--c7{ stroke:#e74f78 }
+    .band-curve{ fill:none; stroke-width:2; vector-effect:non-scaling-stroke; stroke-opacity:.35; }
 
     @media (max-width:980px){ .wrap{grid-template-columns:1fr; height:auto} .stage{height:60vh; min-height:380px} }
   </style>
 </head>
 <body>
   <header>
-    <h1>Mini Pro-Q: Parametric EQ Trainer</h1>
-    <div class="hint">Tap a dot to select a band. Drag vertically = Gain, horizontally = Frequency. Alt-drag / wheel = Q.</div>
+    <h1>Mini Pro-Q: Parametric EQ Trainer (Live)</h1>
+    <div class="hint">Tap a dot to select a band. Drag = Freq/Gain. Alt-drag / wheel = Q. Click “Enable EQ Audio”.</div>
   </header>
 
   <main class="wrap">
@@ -152,14 +130,25 @@
         <div class="actions">
           <label class="file-btn" for="fileInput">Choose MP3/WAV</label>
           <input id="fileInput" class="file-input" type="file"
-                 accept=".mp3,.wav,audio/mpeg,audio/wav"
-                 multiple>
-          <span class="accept-note">Accepted: <b>.mp3</b>, <b>.wav</b></span>
+                 accept=".mp3,.wav,audio/mpeg,audio/wav" multiple>
+          <button class="btn small" id="enableBtn">Enable EQ Audio</button>
+          <button class="btn small" id="bypassBtn" aria-pressed="false">Bypass: Off</button>
         </div>
+        <div class="accept-note">Accepted: <b>.mp3</b>, <b>.wav</b></div>
         <div class="dropzone" id="dropzone">Drop MP3/WAV files here</div>
         <ul class="filelist" id="fileList"></ul>
         <div class="msg" id="fileMsg"></div>
         <audio id="player" controls preload="metadata"></audio>
+      </div>
+
+      <!-- REGION PRESETS -->
+      <div class="section-title">Region Presets</div>
+      <div class="row" style="gap:8px; justify-content:flex-start; flex-wrap:wrap">
+        <button class="btn small region" data-freq="120"  data-q="0.9">Bass</button>
+        <button class="btn small region" data-freq="350"  data-q="1.0">Low-Mid</button>
+        <button class="btn small region" data-freq="1000" data-q="1.2">Mid</button>
+        <button class="btn small region" data-freq="3000" data-q="1.0">High-Mid</button>
+        <button class="btn small region" data-freq="9000" data-q="0.8">Treble</button>
       </div>
 
       <!-- FILTER CONTROLS -->
@@ -185,9 +174,8 @@
       </div>
 
       <div class="stack">
-        <!-- Gain -->
         <div>
-          <div class="knob" data-min="-24" data-max="24" id="knobGain">
+          <div class="knob" id="knobGain">
             <div class="cap"></div><div class="pointer"></div>
             <input type="range" min="-24" max="24" step="0.1" value="0" aria-label="Gain">
           </div>
@@ -195,9 +183,8 @@
           <div class="knob-value" id="valGain">0.0 dB</div>
         </div>
 
-        <!-- Frequency -->
         <div>
-          <div class="knob" data-min="20" data-max="20000" id="knobFreq">
+          <div class="knob" id="knobFreq">
             <div class="cap"></div><div class="pointer"></div>
             <input type="range" min="20" max="20000" step="1" value="1000" aria-label="Frequency">
           </div>
@@ -205,9 +192,8 @@
           <div class="knob-value" id="valFreq">1.00 kHz</div>
         </div>
 
-        <!-- Q -->
         <div>
-          <div class="knob" data-min="0.2" data-max="18" id="knobQ">
+          <div class="knob" id="knobQ">
             <div class="cap"></div><div class="pointer"></div>
             <input type="range" min="0.2" max="18" step="0.01" value="1.0" aria-label="Q">
           </div>
@@ -244,7 +230,7 @@
   </main>
 
   <script>
-    /* ===== utilities ===== */
+    /* =================== utilities =================== */
     const lerp=(a,b,t)=>a+(b-a)*t;
     const clamp=(x,min,max)=>Math.min(max,Math.max(min,x));
     const logMap=(v,vmin,vmax,xmin,xmax)=>{
@@ -258,27 +244,20 @@
     };
     const fmtFreq=f=> (f>=1000? (f/1000).toFixed(2)+' kHz' : f.toFixed(0)+' Hz');
     const fmtGain=g=> (g>0? '+' : (g===0? '' : '')) + g.toFixed(1)+' dB';
-    const fmtSize = bytes => {
-      const u = ['B','KB','MB','GB']; let i=0, n=bytes;
-      while(n>=1024 && i<u.length-1){ n/=1024; i++; }
-      return n.toFixed(n<10?1:0)+' '+u[i];
-    };
+    const fmtSize = bytes => { const u=['B','KB','MB','GB']; let i=0,n=bytes; while(n>=1024&&i<u.length-1){n/=1024;i++;} return n.toFixed(n<10?1:0)+' '+u[i]; };
 
-    /* ===== DOM ===== */
+    /* =================== DOM refs =================== */
     const svg   = document.getElementById('svg');
     const gridG = document.getElementById('grid');
     const curve = document.getElementById('curve');
     const glow  = document.getElementById('glow');
-    const nodesG= document.getElementById('nodes');
     const bandCurvesG = document.getElementById('bandCurves');
+    const nodesG= document.getElementById('nodes');
     const status= document.getElementById('status');
 
     const kGain = document.querySelector('#knobGain input');
     const kFreq = document.querySelector('#knobFreq input');
     const kQ    = document.querySelector('#knobQ input');
-    const pGain = document.querySelector('#knobGain .pointer');
-    const pFreq = document.querySelector('#knobFreq .pointer');
-    const pQ    = document.querySelector('#knobQ .pointer');
 
     const valGain=document.getElementById('valGain');
     const valFreq=document.getElementById('valFreq');
@@ -291,14 +270,17 @@
     const removeBtn  = document.getElementById('removeBandBtn');
     const resetBtn   = document.getElementById('resetBtn');
 
-    // File loader DOM
+    // File loader
     const fileInput = document.getElementById('fileInput');
     const dropzone  = document.getElementById('dropzone');
     const fileList  = document.getElementById('fileList');
     const fileMsg   = document.getElementById('fileMsg');
     const player    = document.getElementById('player');
+    const enableBtn = document.getElementById('enableBtn');
+    const bypassBtn = document.getElementById('bypassBtn');
+    const regionBtns= document.querySelectorAll('.region');
 
-    /* ===== graph metrics ===== */
+    /* =================== graph metrics =================== */
     const PAD_L=50, PAD_R=20, PAD_T=18, PAD_B=26;
     const W=1000, H=520, X0=PAD_L, X1=W-PAD_R, Y0=PAD_T, Y1=H-PAD_B, MID=(Y0+Y1)/2;
     const FMIN=20, FMAX=20000, DB=24;
@@ -322,8 +304,8 @@
     }
     drawGrid();
 
-    /* ===== state ===== */
-    const FS=48000;
+    /* =================== visual state =================== */
+    const FS=48000; // for plotting
     const MAX_BANDS=24;
     let bands = [
       {type:'peaking', gain:0,   freq:100,   Q:1, slope:12},
@@ -333,15 +315,14 @@
       {type:'peaking', gain:0,   freq:8000,  Q:1, slope:12},
       {type:'peaking', gain:0,   freq:14000, Q:1, slope:12},
     ];
-    let selected = 2; // active for knobs
+    let selected = 2;
 
-    /* ===== biquad coeffs (visual only) ===== */
+    /* =================== DSP (visual curves) =================== */
     function coeffs(type,f0,Q,gain,slopeDbOct=12){
       const A  = Math.pow(10, gain/40);
       const w0 = 2*Math.PI*f0/FS;
       const alpha = Math.sin(w0)/(2*Q);
       let b0,b1,b2,a0,a1,a2;
-
       switch(type){
         case 'peaking':
           b0=1+alpha*A; b1=-2*Math.cos(w0); b2=1-alpha*A;
@@ -378,9 +359,7 @@
       for(let i=0;i<N;i++){
         const fr = 10**( Math.log10(FMIN) + (i/(N-1))*(Math.log10(FMAX)-Math.log10(FMIN)) );
         const w = 2*Math.PI*fr/FS;
-
         let Hre=1, Him=0;
-
         for(const b of bandsArr){
           const c = coeffs(b.type, b.freq, Math.max(0.2, b.Q), b.gain, b.slope||12);
           const cosw=Math.cos(w), sinw=Math.sin(w);
@@ -389,18 +368,12 @@
           const num_im =       - c.b1*sinw - c.b2*sin2;
           const den_re = c.a0 + c.a1*cosw + c.a2*cos2;
           const den_im =       - c.a1*sinw - c.a2*sin2;
-
           const denmag2 = den_re*den_re + den_im*den_im;
           let re = (num_re*den_re + num_im*den_im) / denmag2;
           let im = (num_im*den_re - num_re*den_im) / denmag2;
-
           for(let s=1;s<c.stages;s++){ const rr=re*re - im*im, ii=re*im + im*re; re=rr; im=ii; }
-
-          const tRe = Hre*re - Him*im;
-          const tIm = Hre*im + Him*re;
-          Hre=tRe; Him=tIm;
+          const tRe = Hre*re - Him*im; const tIm = Hre*im + Him*re; Hre=tRe; Him=tIm;
         }
-
         const mag = Math.sqrt(Hre*Hre + Him*Him);
         const dB  = 20*Math.log10(mag);
         const x   = logMap(fr,FMIN,FMAX,X0,X1);
@@ -409,17 +382,12 @@
       }
       return pts;
     }
-
-    function pathFromPts(pts){
-      return pts.map((p,i)=> (i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
-    }
-
+    function pathFromPts(pts){ return pts.map((p,i)=> (i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' '); }
     function singleBandResponse(b){
       const N=350, pts=[];
       for(let i=0;i<N;i++){
         const fr = 10**( Math.log10(FMIN) + (i/(N-1))*(Math.log10(FMAX)-Math.log10(FMIN)) );
         const w = 2*Math.PI*fr/FS;
-
         const c = coeffs(b.type, b.freq, Math.max(0.2,b.Q), b.gain, b.slope||12);
         const cosw=Math.cos(w), sinw=Math.sin(w);
         const cos2=Math.cos(2*w), sin2=Math.sin(2*w);
@@ -427,13 +395,10 @@
         const num_im =       - c.b1*sinw - c.b2*sin2;
         const den_re = c.a0 + c.a1*cosw + c.a2*cos2;
         const den_im =       - c.a1*sinw - c.a2*sin2;
-
         const denmag2 = den_re*den_re + den_im*den_im;
         let re = (num_re*den_re + num_im*den_im) / denmag2;
         let im = (num_im*den_re - num_re*den_im) / denmag2;
-
         for(let s=1;s<c.stages;s++){ const rr=re*re - im*im, ii=re*im + im*re; re=rr; im=ii; }
-
         const mag = Math.sqrt(re*re + im*im);
         const dB  = 20*Math.log10(mag);
         const x   = logMap(fr,FMIN,FMAX,X0,X1);
@@ -443,7 +408,7 @@
       return pts;
     }
 
-    /* ===== render ===== */
+    /* =================== visual render =================== */
     function updateKnobPointers(){
       const angle=(v,min,max)=> (-135 + ((v-min)/(max-min))*270);
       const t=(Math.log10(bands[selected].freq)-Math.log10(FMIN))/(Math.log10(FMAX)-Math.log10(FMIN));
@@ -452,12 +417,7 @@
       document.querySelector('#knobFreq .pointer').style.transform = `translate(-50%, -68%) rotate(${(-135 + t*270)}deg)`;
       document.querySelector('#knobQ .pointer').style.transform    = `translate(-50%, -68%) rotate(${(-135 + tq*270)}deg)`;
     }
-
-    function labelFor(type){
-      return ({peaking:'Bell', lowshelf:'Low Shelf', highshelf:'High Shelf',
-               lowpass:'Low-Pass', highpass:'High-Pass', notch:'Notch', bandpass:'Band-Pass'})[type]||type;
-    }
-
+    function labelFor(type){ return ({peaking:'Bell', lowshelf:'Low Shelf', highshelf:'High Shelf', lowpass:'Low-Pass', highpass:'High-Pass', notch:'Notch', bandpass:'Band-Pass'})[type]||type; }
     function updateReadouts(){
       const b=bands[selected];
       valGain.textContent=fmtGain(b.gain);
@@ -467,7 +427,6 @@
       const bw = 2 * Math.asinh(1/(2*Math.max(0.2,b.Q))) / Math.log(2);
       bwHint.textContent = `~ ${bw.toFixed(2)} oct`;
     }
-
     function renderNodes(){
       const r = 9;
       const html = bands.map((b, i)=>{
@@ -479,7 +438,6 @@
       }).join('');
       nodesG.innerHTML = html;
     }
-
     function renderCurve(){
       const minis = bands.map((b, i)=>{
         const pts = singleBandResponse(b);
@@ -488,33 +446,136 @@
         return `<path class="${cls}" d="${d}"></path>`;
       }).join('');
       bandCurvesG.innerHTML = minis;
-
       const combinedPts = combinedResponse(bands);
       const dCombined   = pathFromPts(combinedPts);
       curve.setAttribute('d', dCombined);
       glow .setAttribute('d', dCombined);
     }
+    function render(){ renderNodes(); renderCurve(); updateKnobPointers(); updateReadouts(); }
 
-    function render(){
-      renderNodes();
-      renderCurve();
-      updateKnobPointers();
-      updateReadouts();
+    /* =================== AUDIO ENGINE =================== */
+    let ctx=null, srcNode=null, masterGain=null, toDest=null;
+    // For each band we keep either 1 node (most) or 2–4 cascaded for HP/LP slopes
+    let bandNodes=[]; // array of { nodes: BiquadFilterNode[], type, slope }
+
+    function ensureContext(){
+      if(ctx) return;
+      ctx = new (window.AudioContext||window.webkitAudioContext)();
+      srcNode = ctx.createMediaElementSource(player);
+      masterGain = ctx.createGain();
+      toDest = masterGain.connect(ctx.destination);
+      rebuildAudioGraph(); // first build
     }
 
-    /* ===== controls & selection ===== */
+    function makeBiquad(type){
+      const biq = ctx.createBiquadFilter();
+      biq.type = type; // 'peaking','lowshelf','highshelf','lowpass','highpass','notch','bandpass'
+      return biq;
+    }
+
+    function stagesFor(type, slope){
+      return (type==='lowpass'||type==='highpass') ? Math.max(1, Math.round((+slope||12)/12)) : 1;
+    }
+
+    function rebuildAudioGraph(){
+      if(!ctx) return;
+      // Disconnect everything first
+      try{ srcNode.disconnect(); }catch{}
+      bandNodes.forEach(b => b.nodes.forEach(n=>{try{n.disconnect();}catch{}}));
+      bandNodes = [];
+
+      // Build nodes per band and connect in series
+      let last = srcNode;
+      bands.forEach((b,i)=>{
+        const nStages = stagesFor(b.type, b.slope);
+        const nodes = Array.from({length:nStages}, ()=> makeBiquad(mapType(b.type)));
+        // chain the stages
+        nodes.reduce((prev,node)=> (prev.connect(node), node), last);
+        last = nodes[nodes.length-1];
+        bandNodes.push({nodes, type:b.type, slope:b.slope});
+        // set initial params
+        updateBandAudioParams(i);
+      });
+      // tail to master
+      last.connect(masterGain);
+    }
+
+    function mapType(t){ // matches MDN types
+      switch(t){
+        case 'peaking': case 'lowshelf': case 'highshelf':
+        case 'lowpass': case 'highpass': case 'notch': case 'bandpass':
+          return t;
+        default: return 'peaking';
+      }
+    }
+
+    function updateBandAudioParams(i){
+      if(!ctx || !bandNodes[i]) return;
+      const b = bands[i];
+      const chain = bandNodes[i].nodes;
+      const now = ctx.currentTime;
+      // MDN: only peaks/shelves use gain
+      const needsGain = (b.type==='peaking'||b.type==='lowshelf'||b.type==='highshelf');
+      chain.forEach(node=>{
+        node.type = mapType(b.type);
+        smoothParam(node.frequency, clamp(b.freq, 20, 20000), now);
+        smoothParam(node.Q,        clamp(b.Q, 0.0001, 1000), now);
+        if(needsGain){ smoothParam(node.gain, clamp(b.gain, -24, 24), now); }
+        else { smoothParam(node.gain, 0, now); }
+      });
+    }
+
+    function smoothParam(param, value, t){
+      try{
+        param.cancelScheduledValues(t);
+        param.setTargetAtTime(value, t, 0.005); // fast, click-free
+      }catch{
+        param.value = value;
+      }
+    }
+
+    function setBypass(on){
+      if(!ctx) return;
+      const pressed = !!on;
+      bypassBtn.setAttribute('aria-pressed', pressed);
+      bypassBtn.textContent = `Bypass: ${pressed? 'On' : 'Off'}`;
+      try{
+        srcNode.disconnect();
+        bandNodes.forEach(b=>b.nodes.forEach(n=>n.disconnect()));
+        masterGain.disconnect();
+      }catch{}
+      if(pressed){
+        // Direct: src -> destination
+        srcNode.connect(ctx.destination);
+      }else{
+        // Rebuild/filter path
+        rebuildAudioGraph();
+      }
+    }
+
+    /* =================== UI bindings (knobs, nodes, regions) =================== */
     function syncKnobsToSelected(){
       const b=bands[selected];
       kGain.value=b.gain; kFreq.value=b.freq; kQ.value=b.Q;
       filterType.value=b.type; slopeSel.value=b.slope||12;
     }
 
-    kGain.addEventListener('input', e=>{ bands[selected].gain=parseFloat(e.target.value); schedule(); });
-    kFreq.addEventListener('input', e=>{ bands[selected].freq=parseFloat(e.target.value); schedule(); });
-    kQ  .addEventListener('input', e=>{ bands[selected].Q   =parseFloat(e.target.value); schedule(); });
+    kGain.addEventListener('input', e=>{ bands[selected].gain=parseFloat(e.target.value); schedule(); audioDirty(selected); });
+    kFreq.addEventListener('input', e=>{ bands[selected].freq=parseFloat(e.target.value); schedule(); audioDirty(selected); });
+    kQ  .addEventListener('input', e=>{ bands[selected].Q   =parseFloat(e.target.value); schedule(); audioDirty(selected); });
 
-    filterType.addEventListener('change', e=>{ bands[selected].type=e.target.value; schedule(); });
-    slopeSel  .addEventListener('change', e=>{ bands[selected].slope=parseInt(e.target.value,10); schedule(); });
+    filterType.addEventListener('change', e=>{ bands[selected].type=e.target.value; schedule(); audioRebuild(); });
+    slopeSel  .addEventListener('change', e=>{ bands[selected].slope=parseInt(e.target.value,10); schedule(); audioRebuild(); });
+
+    // Region preset buttons (sets selected band to a sensible freq & wide-ish Q)
+    regionBtns.forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        bands[selected].freq = parseFloat(btn.dataset.freq);
+        bands[selected].Q    = parseFloat(btn.dataset.q);
+        schedule(); audioDirty(selected);
+        syncKnobsToSelected();
+      });
+    });
 
     addBandBtn.addEventListener('click', ()=>{
       if(bands.length>=MAX_BANDS) return;
@@ -522,14 +583,14 @@
       const nf = clamp(base.freq*1.6, FMIN, FMAX);
       bands.push({type:'peaking', gain:0, freq:nf, Q:1, slope:12});
       selected=bands.length-1;
-      syncKnobsToSelected(); schedule();
+      syncKnobsToSelected(); schedule(); audioRebuild();
     });
 
     removeBtn.addEventListener('click', ()=>{
       if(bands.length<=1) return;
       bands.splice(selected,1);
       selected = Math.max(0, selected-1);
-      syncKnobsToSelected(); schedule();
+      syncKnobsToSelected(); schedule(); audioRebuild();
     });
 
     resetBtn.addEventListener('click', ()=>{
@@ -541,134 +602,80 @@
         {type:'peaking', gain:0, freq:8000,  Q:1, slope:12},
         {type:'peaking', gain:0, freq:14000, Q:1, slope:12},
       ];
-      selected=2; syncKnobsToSelected(); schedule();
+      selected=2; syncKnobsToSelected(); schedule(); audioRebuild();
     });
 
-    /* ===== low-latency dragging (Pointer Events) ===== */
-    let draggingIdx = null;
-    let lastY = 0;
-
-    function onPointerDown(e){
+    // Dragging nodes
+    let draggingIdx = null, lastY = 0;
+    nodesG.addEventListener('pointerdown', e=>{
       const tgt = e.target;
       if(!(tgt instanceof SVGCircleElement)) return;
       const idx = +tgt.dataset.idx;
       selected = idx; syncKnobsToSelected(); renderNodes();
-      draggingIdx = idx;
-      lastY = e.clientY;
-      tgt.setPointerCapture(e.pointerId);
-      e.preventDefault();
-    }
-
-    function onPointerMove(e){
+      draggingIdx = idx; lastY = e.clientY; tgt.setPointerCapture(e.pointerId); e.preventDefault();
+    }, {passive:false});
+    nodesG.addEventListener('pointermove', e=>{
       if(draggingIdx==null) return;
       const rect = svg.getBoundingClientRect();
       const x = clamp(e.clientX-rect.left, X0, X1);
       const y = clamp(e.clientY-rect.top,  Y0, Y1);
+      if(e.altKey){ const dy = (lastY - e.clientY); const k = 0.005; bands[draggingIdx].Q = clamp(bands[draggingIdx].Q * Math.exp(k*dy), 0.2, 18); lastY=e.clientY; }
+      else{ bands[draggingIdx].freq = clamp(invLogMap(x, X0, X1, FMIN, FMAX), FMIN, FMAX);
+            bands[draggingIdx].gain = clamp(((MID - y)/(Y1 - MID))*DB, -DB, DB); }
+      if(draggingIdx===selected){ kGain.value=bands[selected].gain; kFreq.value=bands[selected].freq; kQ.value=bands[selected].Q; }
+      schedule(); audioDirty(draggingIdx); e.preventDefault();
+    }, {passive:false});
+    nodesG.addEventListener('pointerup',   ()=>{ draggingIdx=null; }, {passive:true});
+    nodesG.addEventListener('pointercancel',()=>{ draggingIdx=null; }, {passive:true});
 
-      if(e.altKey){
-        const dy = (lastY - e.clientY);
-        const k = 0.005;
-        bands[draggingIdx].Q = clamp(bands[draggingIdx].Q * Math.exp(k*dy), 0.2, 18);
-        lastY = e.clientY;
-      }else{
-        bands[draggingIdx].freq = clamp(invLogMap(x, X0, X1, FMIN, FMAX), FMIN, FMAX);
-        bands[draggingIdx].gain = clamp(((MID - y)/(Y1 - MID))*DB, -DB, DB);
-      }
-      if(draggingIdx===selected){
-        kGain.value=bands[selected].gain;
-        kFreq.value=bands[selected].freq;
-        kQ.value   =bands[selected].Q;
-      }
-      schedule();
-      e.preventDefault();
-    }
-
-    function onPointerUp(e){
-      if(draggingIdx==null) return;
-      try{ e.target.releasePointerCapture(e.pointerId); }catch{}
-      draggingIdx=null;
-      e.preventDefault();
-    }
-
-    nodesG.addEventListener('pointerdown', onPointerDown, {passive:false});
-    nodesG.addEventListener('pointermove', onPointerMove, {passive:false});
-    nodesG.addEventListener('pointerup',   onPointerUp,   {passive:false});
-    nodesG.addEventListener('pointercancel', onPointerUp, {passive:false});
-
-    // Wheel for Q (desktop)
+    // Wheel: Q (desktop)
     svg.addEventListener('wheel', (e)=>{
       const delta = Math.sign(e.deltaY);
       bands[selected].Q = clamp(bands[selected].Q * (delta>0? 0.93 : 1/0.93), 0.2, 18);
-      kQ.value=bands[selected].Q; schedule();
+      kQ.value=bands[selected].Q; schedule(); audioDirty(selected);
       e.preventDefault();
     }, {passive:false});
 
-    /* ===== rAF scheduler to avoid jank ===== */
+    /* =================== rAF render scheduler =================== */
     let rafId=null;
-    function schedule(){
-      if(rafId!=null) return;
-      rafId = requestAnimationFrame(()=>{ rafId=null; render(); });
-    }
+    function schedule(){ if(rafId!=null) return; rafId = requestAnimationFrame(()=>{ rafId=null; render(); }); }
 
-    /* ===== AUDIO LOADER (MP3/WAV only) ===== */
+    /* =================== Audio scheduler helpers =================== */
+    function audioDirty(i){ if(!ctx) return; updateBandAudioParams(i); }
+    function audioRebuild(){ if(!ctx) return; rebuildAudioGraph(); }
+
+    /* =================== File loader (MP3/WAV only) =================== */
     const allowedMimes = new Set(['audio/mpeg','audio/wav','audio/x-wav']);
     const allowedExts  = new Set(['.mp3','.wav']);
     let currentURL = null;
-
-    function isAllowed(file){
-      if(allowedMimes.has(file.type)) return true;
-      const dot = file.name.lastIndexOf('.');
-      const ext = dot>=0 ? file.name.slice(dot).toLowerCase() : '';
-      return allowedExts.has(ext);
-    }
-
+    function isAllowed(file){ if(allowedMimes.has(file.type)) return true; const dot=file.name.lastIndexOf('.'); const ext=dot>=0? file.name.slice(dot).toLowerCase():''; return allowedExts.has(ext); }
     function handleFiles(files){
-      const all = Array.from(files||[]);
-      const good = [], bad = [];
-      all.forEach(f => (isAllowed(f)? good : bad).push(f));
-
-      // List files
-      fileList.innerHTML = good.map(f =>
-        `<li><span>${f.name}</span><small>${fmtSize(f.size)}</small></li>`).join('');
-
-      // Messages
-      if(good.length){
-        fileMsg.className='msg ok';
-        fileMsg.textContent = `${good.length} audio file${good.length>1?'s':''} ready`;
-      }else{
-        fileMsg.className='msg warn';
-        fileMsg.textContent = 'Please choose an MP3 or WAV file.';
-      }
-      if(bad.length){
-        fileMsg.className='msg err';
-        fileMsg.textContent = `Rejected ${bad.length} file${bad.length>1?'s':''}: only MP3/WAV allowed.`;
-      }
-
-      // Load first valid file into the audio player
-      if(good.length){
-        if(currentURL){ URL.revokeObjectURL(currentURL); currentURL=null; }
-        currentURL = URL.createObjectURL(good[0]);
-        player.src = currentURL;
-        player.load();
-      }
+      const all = Array.from(files||[]); const good=[], bad=[];
+      all.forEach(f => (isAllowed(f)? good:bad).push(f));
+      fileList.innerHTML = good.map(f => `<li><span>${f.name}</span><small>${fmtSize(f.size)}</small></li>`).join('');
+      if(bad.length){ fileMsg.className='msg err'; fileMsg.textContent=`Rejected ${bad.length} file${bad.length>1?'s':''}: only MP3/WAV allowed.`; }
+      else if(good.length){ fileMsg.className='msg ok'; fileMsg.textContent=`${good.length} audio file${good.length>1?'s':''} ready`; }
+      else { fileMsg.className='msg warn'; fileMsg.textContent='Please choose an MP3 or WAV file.'; }
+      if(good.length){ if(currentURL){ URL.revokeObjectURL(currentURL); currentURL=null; } currentURL=URL.createObjectURL(good[0]); player.src=currentURL; player.load(); }
     }
-
-    // input picker
     fileInput.addEventListener('change', e => handleFiles(e.target.files));
+    ;['dragenter','dragover'].forEach(ev => dropzone.addEventListener(ev, e=>{ e.preventDefault(); dropzone.classList.add('drag'); }, {passive:false}));
+    ;['dragleave','drop'].forEach (ev => dropzone.addEventListener(ev, e=>{ e.preventDefault(); dropzone.classList.remove('drag'); }, {passive:false}));
+    dropzone.addEventListener('drop', e=>{ const dt=e.dataTransfer; if(dt && dt.files) handleFiles(dt.files); }, {passive:false});
 
-    // drag & drop
-    ;['dragenter','dragover'].forEach(ev =>
-      dropzone.addEventListener(ev, (e)=>{ e.preventDefault(); dropzone.classList.add('drag'); }, {passive:false})
-    );
-    ;['dragleave','drop'].forEach(ev =>
-      dropzone.addEventListener(ev, (e)=>{ e.preventDefault(); dropzone.classList.remove('drag'); }, {passive:false})
-    );
-    dropzone.addEventListener('drop', (e)=>{
-      const dt = e.dataTransfer;
-      if(dt && dt.files) handleFiles(dt.files);
-    }, {passive:false});
+    /* =================== enable / bypass =================== */
+    enableBtn.addEventListener('click', async()=>{
+      ensureContext();
+      if(ctx.state==='suspended'){ await ctx.resume(); }
+      // helpful on iOS: kick playback if loaded
+      try{ await player.play(); }catch{}
+    });
+    bypassBtn.addEventListener('click', ()=>{
+      const on = bypassBtn.getAttribute('aria-pressed')!=='true';
+      setBypass(on);
+    });
 
-    /* ===== init ===== */
+    /* =================== init =================== */
     function init(){ syncKnobsToSelected(); render(); }
     init();
   </script>
