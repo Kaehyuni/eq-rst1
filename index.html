@@ -3,60 +3,54 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mini Pro-Q EQ Trainer</title>
+  <title>Mini Pro-Q EQ Trainer – Multi-band, Touch-Draggable</title>
 
-  <!-- ========== CSS (inline) ========== -->
   <style>
     :root{
-      --bg: #0e0f13;
-      --panel:#171922;
-      --text:#e9ecf1;
-      --muted:#8b90a3;
-      --accent:#7aa5ff;
-      --grid:#2a2d39;
-      --zero:#c7cbe0;
-      --curve:#ff5ec9;
-      --node:#ffd257;
+      --bg:#0e0f13; --panel:#171922; --text:#e9ecf1; --muted:#8b90a3;
+      --accent:#7aa5ff; --grid:#2a2d39; --zero:#c7cbe0; --curve:#ff5ec9; --node:#ffd257;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
-      margin:0; background:radial-gradient(1200px 800px at 70% 20%, #141722 0%, #0f1118 50%, #0b0c10 100%);
+      margin:0;
+      background:radial-gradient(1200px 800px at 70% 20%, #141722 0%, #0f1118 50%, #0b0c10 100%);
       color:var(--text); font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
-    header{
-      padding:16px 20px; display:flex; align-items:center; gap:16px;
-    }
+    header{padding:16px 20px; display:flex; align-items:center; gap:16px}
     header h1{font-size:20px; margin:0; letter-spacing:.3px}
     header .hint{font-size:13px; color:var(--muted)}
+
     .wrap{
       display:grid; grid-template-columns: 280px 1fr; gap:16px;
-      height:calc(100% - 64px); padding:0 16px 16px;
+      height:calc(100% - 64px); padding:0 16px 16px; min-width:320px;
     }
-    /* Control panel */
+
+    /* ===== Control panel (with clipping) ===== */
     .panel{
       background:linear-gradient(180deg, #171a25 0%, #131620 100%);
       border:1px solid #1f2330; border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:14px;
       box-shadow:0 8px 24px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
+      overflow:hidden;
     }
     .row{display:flex; align-items:center; justify-content:space-between; gap:10px}
     .row label{font-size:13px; color:var(--muted)}
     .readout{font-variant-numeric:tabular-nums; font-weight:600; color:var(--text)}
-    select, button, .toggle{
-      background:#1b1f2c; color:var(--text); border:1px solid #262c3b; border-radius:10px; padding:8px 10px; font-size:14px;
-      outline: none;
+    select, button{
+      background:#1b1f2c; color:var(--text); border:1px solid #262c3b; border-radius:10px; padding:8px 10px; font-size:14px; outline:none;
     }
     .small{font-size:12px; padding:6px 8px}
     .btn{cursor:pointer}
-    .stack{display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-top:6px}
-    /* Knob (styled range) */
+    .stack{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:14px; margin-top:6px; align-items:start}
+
+    /* ===== Knob (responsive, contained) ===== */
     .knob{
-      --size: 90px;
+      --size: clamp(64px, 28vw, 90px);
       width:var(--size); height:var(--size); border-radius:50%;
       background:conic-gradient(from 210deg at 50% 50%, #2a3146 0 300deg, #191d28 0);
       border:1px solid #2b3142; position:relative; display:grid; place-items:center;
       box-shadow: inset 0 6px 18px rgba(0,0,0,.45), 0 2px 0 rgba(255,255,255,.03);
-      margin:0 auto;
+      margin:0 auto; flex:0 0 auto;
     }
     .knob .cap{
       width:64%; height:64%; border-radius:50%;
@@ -64,56 +58,73 @@
       border:1px solid #252c3b; position:relative;
     }
     .knob .pointer{
-      position:absolute; top:4%; left:50%; width:2px; height:22%;
-      background:#ffffff; transform-origin:bottom center; border-radius:2px;
+      position:absolute; left:50%; top:50%;
+      width:2px; height:22%; background:#fff; transform-origin:bottom center;
+      transform: translate(-50%, -68%) rotate(0deg); border-radius:2px;
       filter: drop-shadow(0 0 2px rgba(255,255,255,.4));
     }
-    .knob input[type="range"]{
-      -webkit-appearance:none; appearance:none; position:absolute; inset:0; opacity:0; cursor:pointer;
-    }
-    .knob-legend{ text-align:center; margin-top:6px; font-size:13px; color:var(--muted)}
-    .knob-value{ text-align:center; margin-top:2px; font-size:14px; font-weight:700}
+    .knob input[type="range"]{ -webkit-appearance:none; appearance:none; position:absolute; inset:0; opacity:0; cursor:pointer; }
+    .knob-legend, .knob-value{ text-align:center; white-space:nowrap }
+    .knob-legend{ margin-top:6px; font-size:13px; color:var(--muted)}
+    .knob-value{ margin-top:2px; font-size:14px; font-weight:700}
 
-    /* Graph area */
+    /* ===== Graph ===== */
     .stage{
       background:#121520; border:1px solid #1f2330; border-radius:14px; padding:14px; display:flex; flex-direction:column;
       box-shadow:0 8px 24px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
     }
     .stage-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px}
     .stage-header .badge{font-size:12px; color:var(--muted)}
-    .graph{
-      flex:1; position:relative; overflow:hidden; border-radius:10px; background:linear-gradient(180deg, #151926 0%, #111522 100%);
-    }
-    .graph svg{position:absolute; inset:0; width:100%; height:100%}
-    /* tooltips / legend */
+    .graph{ flex:1; position:relative; overflow:hidden; border-radius:10px; background:linear-gradient(180deg, #151926 0%, #111522 100%); }
+    .graph svg{ position:absolute; inset:0; width:100%; height:100%; touch-action:none; } /* finger drags */
+
     .legend{position:absolute; right:10px; top:10px; font-size:12px; color:var(--muted); background:#101320aa; padding:6px 8px; border:1px solid #22283a; border-radius:8px}
-    /* Node */
-    .node{
-      fill:var(--node); stroke:#1c1c1c; stroke-width:1.5; filter: drop-shadow(0 0 4px rgba(255,210,87,.45));
-      cursor:grab;
-    }
+
+    /* ===== Nodes ===== */
+    .node{ fill:var(--node); stroke:#1c1c1c; stroke-width:1.5; filter: drop-shadow(0 0 4px rgba(255,210,87,.45)); cursor:grab; }
     .node:active{cursor:grabbing}
-    /* Utility */
-    .spacer{height:8px}
-    @media (max-width: 980px){
-      .wrap{grid-template-columns:1fr; height:auto}
-      .stage{height:60vh}
+    .node--selected{ stroke:#000; stroke-width:2.5; filter: drop-shadow(0 0 6px rgba(122,165,255,.6)); }
+
+    /* ===== Colored nodes ===== */
+    .node--c0 { fill:#ff5ec9 }  /* pink */
+    .node--c1 { fill:#7aa5ff }  /* blue */
+    .node--c2 { fill:#9cff57 }  /* lime */
+    .node--c3 { fill:#f9d84a }  /* yellow */
+    .node--c4 { fill:#ff9157 }  /* orange */
+    .node--c5 { fill:#b67bff }  /* purple */
+    .node--c6 { fill:#52e5b1 }  /* aqua */
+    .node--c7 { fill:#e74f78 }  /* red-pink */
+
+    /* ===== Per-band mini curves ===== */
+    .band-curve{
+      fill:none;
+      stroke-width:2;
+      vector-effect:non-scaling-stroke;
+      stroke-opacity:.35;
     }
+    .band--c0{ stroke:#ff5ec9 }
+    .band--c1{ stroke:#7aa5ff }
+    .band--c2{ stroke:#9cff57 }
+    .band--c3{ stroke:#f9d84a }
+    .band--c4{ stroke:#ff9157 }
+    .band--c5{ stroke:#b67bff }
+    .band--c6{ stroke:#52e5b1 }
+    .band--c7{ stroke:#e74f78 }
+
+    @media (max-width:980px){ .wrap{grid-template-columns:1fr; height:auto} .stage{height:60vh; min-height:380px} }
   </style>
 </head>
 <body>
-  <!-- ========== HTML (structure) ========== -->
   <header>
     <h1>Mini Pro-Q: Parametric EQ Trainer</h1>
-    <div class="hint">Drag the dot to set <b>Gain</b> (vertical) & <b>Freq</b> (horizontal). Scroll/Alt-drag for <b>Q</b>.</div>
+    <div class="hint">Tap a dot to select a band. Drag vertically = Gain, horizontally = Frequency. Alt-drag / wheel = Q.</div>
   </header>
 
   <main class="wrap">
-
-    <!-- Controls -->
+    <!-- ===== Controls ===== -->
     <section class="panel" aria-label="Controls">
       <div class="row">
-        <label>Filter Type</label>
+        <label>Filter Type (selected band)</label>
         <select id="filterType">
           <option value="peaking">Bell (Peaking)</option>
           <option value="lowshelf">Low Shelf</option>
@@ -125,7 +136,7 @@
         </select>
       </div>
       <div class="row">
-        <label>Slope (for HP/LP)</label>
+        <label>Slope (HP/LP only)</label>
         <select id="slope" class="small">
           <option>6</option><option selected>12</option><option>24</option><option>48</option>
         </select>
@@ -136,8 +147,7 @@
         <!-- Gain -->
         <div>
           <div class="knob" data-min="-24" data-max="24" id="knobGain">
-            <div class="cap"></div>
-            <div class="pointer"></div>
+            <div class="cap"></div><div class="pointer"></div>
             <input type="range" min="-24" max="24" step="0.1" value="0" aria-label="Gain">
           </div>
           <div class="knob-legend">Gain</div>
@@ -147,8 +157,7 @@
         <!-- Frequency -->
         <div>
           <div class="knob" data-min="20" data-max="20000" id="knobFreq">
-            <div class="cap"></div>
-            <div class="pointer"></div>
+            <div class="cap"></div><div class="pointer"></div>
             <input type="range" min="20" max="20000" step="1" value="1000" aria-label="Frequency">
           </div>
           <div class="knob-legend">Frequency</div>
@@ -158,8 +167,7 @@
         <!-- Q -->
         <div>
           <div class="knob" data-min="0.2" data-max="18" id="knobQ">
-            <div class="cap"></div>
-            <div class="pointer"></div>
+            <div class="cap"></div><div class="pointer"></div>
             <input type="range" min="0.2" max="18" step="0.01" value="1.0" aria-label="Q">
           </div>
           <div class="knob-legend">Q (Bandwidth)</div>
@@ -167,59 +175,62 @@
         </div>
       </div>
 
-      <div class="spacer"></div>
-      <div class="row">
+      <div class="row" style="margin-top:6px">
+        <button class="btn small" id="addBandBtn">+ Add Band</button>
+        <button class="btn small" id="removeBandBtn">– Remove Selected</button>
         <button class="btn small" id="resetBtn">Reset</button>
         <span class="readout" id="bandwidthHint">~ 1.00 oct</span>
       </div>
     </section>
 
-    <!-- Graph -->
+    <!-- ===== Graph ===== -->
     <section class="stage" aria-label="Graph">
       <div class="stage-header">
         <div class="badge">20 Hz – 20 kHz • ±24 dB</div>
         <div class="badge" id="status">Bell @ 1.00 kHz / 0.0 dB / Q 1.00</div>
       </div>
-
       <div class="graph" id="graph">
         <svg id="svg" viewBox="0 0 1000 520" preserveAspectRatio="none" aria-hidden="true">
-          <!-- grid -->
           <g id="grid"></g>
-          <!-- response curve -->
-          <path id="curve" fill="none" stroke="var(--curve)" stroke-width="3.0" vector-effect="non-scaling-stroke" />
-          <path id="glow"  fill="none" stroke="var(--curve)" stroke-opacity=".25" stroke-width="9" vector-effect="non-scaling-stroke" />
-          <!-- draggable node -->
-          <circle id="node" class="node" r="8" cx="500" cy="260"></circle>
+
+          <!-- per-band mini curves (new) -->
+          <g id="bandCurves"></g>
+
+          <!-- combined response (top) -->
+          <path id="curve" fill="none" stroke="var(--curve)" stroke-width="3" vector-effect="non-scaling-stroke"/>
+          <path id="glow"  fill="none" stroke="var(--curve)" stroke-opacity=".25" stroke-width="9" vector-effect="non-scaling-stroke"/>
+
+          <!-- nodes -->
+          <g id="nodes"></g>
         </svg>
-        <div class="legend">Tip: Alt + drag (or scroll) to change Q</div>
+        <div class="legend">Tip: Alt + drag (or wheel) to change Q • Tap a node to select it</div>
       </div>
     </section>
-
   </main>
 
-  <!-- ========== JS (inline) ========== -->
   <script>
-    /* ---------- utilities ---------- */
-    const lerp = (a,b,t)=>a+(b-a)*t;
+    /* ===== utilities ===== */
+    const lerp=(a,b,t)=>a+(b-a)*t;
     const clamp=(x,min,max)=>Math.min(max,Math.max(min,x));
-    const logMap = (v, vmin, vmax, xmin, xmax) => {
+    const logMap=(v,vmin,vmax,xmin,xmax)=>{
       const t=(Math.log10(v)-Math.log10(vmin))/(Math.log10(vmax)-Math.log10(vmin));
       return lerp(xmin,xmax,t);
     };
-    const invLogMap = (x, xmin, xmax, vmin, vmax) => {
-      const t=(x - xmin)/(xmax - xmin);
+    const invLogMap=(x,xmin,xmax,vmin,vmax)=>{
+      const t=(x-xmin)/(xmax-xmin);
       const p=Math.log10(vmin)+t*(Math.log10(vmax)-Math.log10(vmin));
       return 10**p;
     };
-    const fmtFreq = f => (f>=1000? (f/1000).toFixed(2)+' kHz' : f.toFixed(0)+' Hz');
-    const fmtGain = g => (g>0? '+' : (g===0? '' : '')) + g.toFixed(1)+' dB';
+    const fmtFreq=f=> (f>=1000? (f/1000).toFixed(2)+' kHz' : f.toFixed(0)+' Hz');
+    const fmtGain=g=> (g>0? '+' : (g===0? '' : '')) + g.toFixed(1)+' dB';
 
-    /* ---------- DOM refs ---------- */
-    const svg = document.getElementById('svg');
+    /* ===== DOM ===== */
+    const svg   = document.getElementById('svg');
     const gridG = document.getElementById('grid');
     const curve = document.getElementById('curve');
     const glow  = document.getElementById('glow');
-    const node  = document.getElementById('node');
+    const nodesG= document.getElementById('nodes');
+    const bandCurvesG = document.getElementById('bandCurves');
     const status= document.getElementById('status');
 
     const kGain = document.querySelector('#knobGain input');
@@ -236,265 +247,328 @@
 
     const filterType = document.getElementById('filterType');
     const slopeSel   = document.getElementById('slope');
+    const addBandBtn = document.getElementById('addBandBtn');
+    const removeBtn  = document.getElementById('removeBandBtn');
     const resetBtn   = document.getElementById('resetBtn');
 
-    /* ---------- graph metrics ---------- */
+    /* ===== graph metrics ===== */
     const PAD_L=50, PAD_R=20, PAD_T=18, PAD_B=26;
-    let W=1000, H=520, X0=PAD_L, X1=W-PAD_R, Y0=PAD_T, Y1=H-PAD_B, MID=(Y0+Y1)/2;
+    const W=1000, H=520, X0=PAD_L, X1=W-PAD_R, Y0=PAD_T, Y1=H-PAD_B, MID=(Y0+Y1)/2;
     const FMIN=20, FMAX=20000, DB=24;
 
     function drawGrid(){
-      const g = [];
-      // horizontal gain lines
+      const g=[];
       for(let d=-24; d<=24; d+=6){
         const y = MID - (d/DB)*(Y1 - MID);
-        const color = (d===0? 'var(--zero)' : 'var(--grid)');
-        const opacity = (d===0? 0.6 : 1);
-        g.push(`<line x1="${X0}" y1="${y.toFixed(1)}" x2="${X1}" y2="${y.toFixed(1)}" stroke="${color}" stroke-opacity="${opacity}" stroke-width="${d===0?1.6:1}" />`);
-        if(d!==0){
-          g.push(`<text x="${X0-8}" y="${y+4}" fill="var(--muted)" font-size="11" text-anchor="end">${d} dB</text>`);
-        }
+        const color=(d===0? 'var(--zero)':'var(--grid)');
+        const opacity=(d===0? 0.6:1);
+        g.push(`<line x1="${X0}" y1="${y.toFixed(1)}" x2="${X1}" y2="${y.toFixed(1)}" stroke="${color}" stroke-opacity="${opacity}" stroke-width="${d===0?1.6:1}"/>`);
+        if(d!==0){ g.push(`<text x="${X0-8}" y="${y+4}" fill="var(--muted)" font-size="11" text-anchor="end">${d} dB</text>`); }
       }
-      // vertical frequency lines
       const ticks=[20,50,100,200,500,1000,2000,5000,10000,20000];
       for(const f of ticks){
-        const x = logMap(f,FMIN,FMAX,X0,X1);
-        g.push(`<line x1="${x.toFixed(1)}" y1="${Y0}" x2="${x.toFixed(1)}" y2="${Y1}" stroke="var(--grid)" />`);
+        const x=logMap(f,FMIN,FMAX,X0,X1);
+        g.push(`<line x1="${x.toFixed(1)}" y1="${Y0}" x2="${x.toFixed(1)}" y2="${Y1}" stroke="var(--grid)"/>`);
         g.push(`<text x="${x}" y="${Y1+18}" fill="var(--muted)" font-size="11" text-anchor="middle">${f>=1000? (f/1000)+'k' : f}</text>`);
       }
-      gridG.innerHTML = g.join('');
+      gridG.innerHTML=g.join('');
     }
     drawGrid();
 
-    /* ---------- parameter state ---------- */
-    const state = {
-      type: 'peaking',
-      gain: 0.0,
-      freq: 1000,
-      Q: 1.0,
-      slope: 12
-    };
+    /* ===== state ===== */
+    const FS=48000;
+    const MAX_BANDS=24;
+    let bands = [
+      {type:'peaking', gain:0,   freq:100,   Q:1, slope:12},
+      {type:'peaking', gain:0,   freq:250,   Q:1, slope:12},
+      {type:'peaking', gain:0,   freq:1000,  Q:1, slope:12},
+      {type:'peaking', gain:0,   freq:4000,  Q:1, slope:12},
+      {type:'peaking', gain:0,   freq:8000,  Q:1, slope:12},
+      {type:'peaking', gain:0,   freq:14000, Q:1, slope:12},
+    ];
+    let selected = 2; // active for knobs
 
-    /* ---------- knob visuals ---------- */
-    function updateKnobPointers(){
-      // map values to angles (approx -135..+135)
-      const angle = (v,min,max)=> (-135 + ( (v-min)/(max-min) ) * 270);
-      pGain.style.transform=`rotate(${angle(state.gain,-24,24)}deg)`;
-      // frequency uses log mapping
-      const t=(Math.log10(state.freq)-Math.log10(FMIN))/(Math.log10(FMAX)-Math.log10(FMIN));
-      pFreq.style.transform=`rotate(${(-135 + t*270)}deg)`;
-      pQ.style.transform=`rotate(${(-135 + ((state.Q-0.2)/(18-0.2))*270)}deg)`;
-    }
-
-    function updateReadouts(){
-      valGain.textContent = fmtGain(state.gain);
-      valFreq.textContent = fmtFreq(state.freq);
-      valQ.textContent    = state.Q.toFixed(2);
-      status.textContent  = `${labelFor(state.type)} @ ${fmtFreq(state.freq)} / ${fmtGain(state.gain)} / Q ${state.Q.toFixed(2)}`;
-
-      // quick bandwidth approximation in octaves: BW ≈ 1/log(2) * asinh(1/(2Q)) * 2  (simple visual estimate)
-      const bw = 2 * Math.asinh(1/(2*state.Q)) / Math.log(2);
-      bwHint.textContent = `~ ${bw.toFixed(2)} oct`;
-    }
-
-    function labelFor(type){
-      return ({
-        peaking:'Bell',
-        lowshelf:'Low Shelf',
-        highshelf:'High Shelf',
-        lowpass:'Low-Pass',
-        highpass:'High-Pass',
-        notch:'Notch',
-        bandpass:'Band-Pass'
-      })[type] || type;
-    }
-
-    /* ---------- DSP cookbook (visual only) ---------- */
-    const FS=48000;  // arbitrary for plotting
-    function coeffs(type, f0, Q, gain, slopeDbOct=12){
-      const A  = Math.pow(10, gain/40); // amplitude for shelves/peaking
+    /* ===== biquad coeffs (visual only) ===== */
+    function coeffs(type,f0,Q,gain,slopeDbOct=12){
+      const A  = Math.pow(10, gain/40);
       const w0 = 2*Math.PI*f0/FS;
       const alpha = Math.sin(w0)/(2*Q);
-
       let b0,b1,b2,a0,a1,a2;
+
       switch(type){
         case 'peaking':
-          b0 = 1 + alpha*A;
-          b1 = -2*Math.cos(w0);
-          b2 = 1 - alpha*A;
-          a0 = 1 + alpha/A;
-          a1 = -2*Math.cos(w0);
-          a2 = 1 - alpha/A;
+          b0=1+alpha*A; b1=-2*Math.cos(w0); b2=1-alpha*A;
+          a0=1+alpha/A; a1=-2*Math.cos(w0); a2=1-alpha/A;
           break;
         case 'lowshelf':{
-          const sqrtA=Math.sqrt(A);
-          const twoSqrtAalpha = 2*sqrtA*alpha;
-          b0 =    A*( (A+1) - (A-1)*Math.cos(w0) + twoSqrtAalpha );
-          b1 =  2*A*( (A-1) - (A+1)*Math.cos(w0) );
-          b2 =    A*( (A+1) - (A-1)*Math.cos(w0) - twoSqrtAalpha );
-          a0 =        (A+1) + (A-1)*Math.cos(w0) + twoSqrtAalpha;
-          a1 =   -2*( (A-1) + (A+1)*Math.cos(w0) );
-          a2 =        (A+1) + (A-1)*Math.cos(w0) - twoSqrtAalpha;
+          const sqrtA=Math.sqrt(A), two=2*sqrtA*alpha, c=Math.cos(w0);
+          b0= A*((A+1)-(A-1)*c+two); b1=2*A*((A-1)-(A+1)*c); b2=A*((A+1)-(A-1)*c-two);
+          a0=    (A+1)+(A-1)*c+two; a1=   -2*((A-1)+(A+1)*c); a2=   (A+1)+(A-1)*c-two;
           break;}
         case 'highshelf':{
-          const sqrtA=Math.sqrt(A);
-          const twoSqrtAalpha = 2*sqrtA*alpha;
-          b0 =    A*( (A+1) + (A-1)*Math.cos(w0) + twoSqrtAalpha );
-          b1 = -2*A*( (A-1) + (A+1)*Math.cos(w0) );
-          b2 =    A*( (A+1) + (A-1)*Math.cos(w0) - twoSqrtAalpha );
-          a0 =        (A+1) - (A-1)*Math.cos(w0) + twoSqrtAalpha;
-          a1 =    2*( (A-1) - (A+1)*Math.cos(w0) );
-          a2 =        (A+1) - (A-1)*Math.cos(w0) - twoSqrtAalpha;
+          const sqrtA=Math.sqrt(A), two=2*sqrtA*alpha, c=Math.cos(w0);
+          b0= A*((A+1)+(A-1)*c+two); b1=-2*A*((A-1)+(A+1)*c); b2=A*((A+1)+(A-1)*c-two);
+          a0=    (A+1)-(A-1)*c+two; a1=    2*((A-1)-(A+1)*c); a2=   (A+1)-(A-1)*c-two;
           break;}
         case 'notch':
-          b0 = 1;
-          b1 = -2*Math.cos(w0);
-          b2 = 1;
-          a0 = 1 + alpha;
-          a1 = -2*Math.cos(w0);
-          a2 = 1 - alpha;
-          break;
-        case 'bandpass': // constant skirt gain
-          b0 = Q*alpha;
-          b1 = 0;
-          b2 = -Q*alpha;
-          a0 = 1 + alpha;
-          a1 = -2*Math.cos(w0);
-          a2 = 1 - alpha;
-          break;
+          b0=1; b1=-2*Math.cos(w0); b2=1; a0=1+alpha; a1=-2*Math.cos(w0); a2=1-alpha; break;
+        case 'bandpass':
+          b0=Q*alpha; b1=0; b2=-Q*alpha; a0=1+alpha; a1=-2*Math.cos(w0); a2=1-alpha; break;
         case 'lowpass':
-        case 'highpass': {
-          // emulate slope by cascading 1–4 poles
-          // here we return coefficients for a single 12 dB/oct biquad; slope handling is in magnitude()
-          const passLow = (type==='lowpass');
-          const cosw = Math.cos(w0);
-          const alphaLP = alpha;
-          if(passLow){
-            b0 = (1 - cosw)/2;
-            b1 = 1 - cosw;
-            b2 = (1 - cosw)/2;
-          } else {
-            b0 =  (1 + cosw)/2;
-            b1 = -(1 + cosw);
-            b2 =  (1 + cosw)/2;
-          }
-          a0 = 1 + alphaLP;
-          a1 = -2*cosw;
-          a2 = 1 - alphaLP;
-          break;
+        case 'highpass':{
+          const passLow=(type==='lowpass'), c=Math.cos(w0), a=alpha;
+          if(passLow){ b0=(1-c)/2; b1=1-c; b2=(1-c)/2; } else { b0=(1+c)/2; b1=-(1+c); b2=(1+c)/2; }
+          a0=1+a; a1=-2*c; a2=1-a; break;
         }
-        default:
-          // fallback to peaking
-          return coeffs('peaking', f0, Q, gain);
+        default: return coeffs('peaking',f0,Q,gain);
       }
-      return {b0,b1,b2,a0,a1,a2};
+      const stages=(type==='lowpass'||type==='highpass') ? Math.max(1, Math.round(slopeDbOct/12)) : 1;
+      return {b0,b1,b2,a0,a1,a2, stages};
     }
 
-    function magResponse(type, f0, Q, gain, slopeDbOct){
-      // sample ~350 log points
+    function combinedResponse(bandsArr){
       const N=350, pts=[];
-      const base = coeffs(type, f0, Q, gain, slopeDbOct);
-      const stages = (type==='lowpass'||type==='highpass') ? Math.max(1, Math.round(slopeDbOct/12)) : 1;
       for(let i=0;i<N;i++){
         const fr = 10**( Math.log10(FMIN) + (i/(N-1))*(Math.log10(FMAX)-Math.log10(FMIN)) );
         const w = 2*Math.PI*fr/FS;
-        // H(e^jw)
-        let H_re=1, H_im=0; // product of stages
-        for(let s=0;s<stages;s++){
-          const {b0,b1,b2,a0,a1,a2} = base;
-          const ejw_re = Math.cos(w), ejw_im = Math.sin(w);
-          // numerator b0 + b1 z^-1 + b2 z^-2 with z^-1 = e^{-jw}
-          const num_re = b0 + b1*Math.cos(-w) + b2*Math.cos(-2*w);
-          const num_im =       b1*Math.sin(-w) + b2*Math.sin(-2*w);
-          const den_re = a0 + a1*Math.cos(-w) + a2*Math.cos(-2*w);
-          const den_im =       a1*Math.sin(-w) + a2*Math.sin(-2*w);
-          const re = (num_re*den_re + num_im*den_im) / (den_re*den_re + den_im*den_im);
-          const im = (num_im*den_re - num_re*den_im) / (den_re*den_re + den_im*den_im);
-          // multiply stage
-          const nH_re = H_re*re - H_im*im;
-          const nH_im = H_re*im + H_im*re;
-          H_re=nH_re; H_im=nH_im;
+
+        let Hre=1, Him=0;
+
+        for(const b of bandsArr){
+          const c = coeffs(b.type, b.freq, Math.max(0.2, b.Q), b.gain, b.slope||12);
+          const cosw=Math.cos(w), sinw=Math.sin(w);
+          const cos2=Math.cos(2*w), sin2=Math.sin(2*w);
+          const num_re = c.b0 + c.b1*cosw + c.b2*cos2;
+          const num_im =       - c.b1*sinw - c.b2*sin2;
+          const den_re = c.a0 + c.a1*cosw + c.a2*cos2;
+          const den_im =       - c.a1*sinw - c.a2*sin2;
+
+          const denmag2 = den_re*den_re + den_im*den_im;
+          let re = (num_re*den_re + num_im*den_im) / denmag2;
+          let im = (num_im*den_re - num_re*den_im) / denmag2;
+
+          for(let s=1;s<c.stages;s++){ const rr=re*re - im*im, ii=re*im + im*re; re=rr; im=ii; }
+
+          const tRe = Hre*re - Him*im;
+          const tIm = Hre*im + Him*re;
+          Hre=tRe; Him=tIm;
         }
-        const mag = Math.sqrt(H_re*H_re + H_im*H_im);
-        const dB = 20*Math.log10(mag);
-        const x = logMap(fr,FMIN,FMAX,X0,X1);
-        const y = MID - (clamp(dB,-DB,DB)/DB)*(Y1 - MID);
+
+        const mag = Math.sqrt(Hre*Hre + Him*Him);
+        const dB  = 20*Math.log10(mag);
+        const x   = logMap(fr,FMIN,FMAX,X0,X1);
+        const y   = MID - (clamp(dB,-DB,DB)/DB)*(Y1 - MID);
         pts.push([x,y]);
       }
       return pts;
     }
 
-    /* ---------- draw curve & node ---------- */
+    function pathFromPts(pts){
+      return pts.map((p,i)=> (i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+    }
+
+    function singleBandResponse(b){
+      const N=350, pts=[];
+      for(let i=0;i<N;i++){
+        const fr = 10**( Math.log10(FMIN) + (i/(N-1))*(Math.log10(FMAX)-Math.log10(FMIN)) );
+        const w = 2*Math.PI*fr/FS;
+
+        const c = coeffs(b.type, b.freq, Math.max(0.2,b.Q), b.gain, b.slope||12);
+        const cosw=Math.cos(w), sinw=Math.sin(w);
+        const cos2=Math.cos(2*w), sin2=Math.sin(2*w);
+        const num_re = c.b0 + c.b1*cosw + c.b2*cos2;
+        const num_im =       - c.b1*sinw - c.b2*sin2;
+        const den_re = c.a0 + c.a1*cosw + c.a2*cos2;
+        const den_im =       - c.a1*sinw - c.a2*sin2;
+
+        const denmag2 = den_re*den_re + den_im*den_im;
+        let re = (num_re*den_re + num_im*den_im) / denmag2;
+        let im = (num_im*den_re - num_re*den_im) / denmag2;
+
+        for(let s=1;s<c.stages;s++){ const rr=re*re - im*im, ii=re*im + im*re; re=rr; im=ii; }
+
+        const mag = Math.sqrt(re*re + im*im);
+        const dB  = 20*Math.log10(mag);
+        const x   = logMap(fr,FMIN,FMAX,X0,X1);
+        const y   = MID - (clamp(dB,-DB,DB)/DB)*(Y1 - MID);
+        pts.push([x,y]);
+      }
+      return pts;
+    }
+
+    /* ===== render ===== */
+    function updateKnobPointers(){
+      const angle=(v,min,max)=> (-135 + ((v-min)/(max-min))*270);
+      const t=(Math.log10(bands[selected].freq)-Math.log10(FMIN))/(Math.log10(FMAX)-Math.log10(FMIN));
+      const tq=(bands[selected].Q - 0.2)/(18-0.2);
+
+      pGain.style.transform = `translate(-50%, -68%) rotate(${angle(bands[selected].gain,-24,24)}deg)`;
+      pFreq.style.transform = `translate(-50%, -68%) rotate(${(-135 + t*270)}deg)`;
+      pQ.style.transform    = `translate(-50%, -68%) rotate(${(-135 + tq*270)}deg)`;
+    }
+
+    function labelFor(type){
+      return ({peaking:'Bell', lowshelf:'Low Shelf', highshelf:'High Shelf',
+               lowpass:'Low-Pass', highpass:'High-Pass', notch:'Notch', bandpass:'Band-Pass'})[type]||type;
+    }
+
+    function updateReadouts(){
+      const b=bands[selected];
+      valGain.textContent=fmtGain(b.gain);
+      valFreq.textContent=fmtFreq(b.freq);
+      valQ.textContent=b.Q.toFixed(2);
+      status.textContent = `${labelFor(b.type)} @ ${fmtFreq(b.freq)} / ${fmtGain(b.gain)} / Q ${b.Q.toFixed(2)}`;
+      const bw = 2 * Math.asinh(1/(2*Math.max(0.2,b.Q))) / Math.log(2);
+      bwHint.textContent = `~ ${bw.toFixed(2)} oct`;
+    }
+
+    function renderNodes(){
+      const r = 9;
+      const html = bands.map((b, i)=>{
+        const x = logMap(b.freq, FMIN, FMAX, X0, X1);
+        const y = MID - (clamp(b.gain, -DB, DB)/DB)*(Y1 - MID);
+        const colorClass = 'node--c' + (i % 8);
+        const cls = 'node ' + colorClass + (i === selected ? ' node--selected' : '');
+        return `<circle class="${cls}" r="${r}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" data-idx="${i}" />`;
+      }).join('');
+      nodesG.innerHTML = html;
+    }
+
+    function renderCurve(){
+      // per-band mini curves
+      const minis = bands.map((b, i)=>{
+        const pts = singleBandResponse(b);
+        const d   = pathFromPts(pts);
+        const cls = 'band-curve band--c' + (i % 8);
+        return `<path class="${cls}" d="${d}"></path>`;
+      }).join('');
+      bandCurvesG.innerHTML = minis;
+
+      // combined on top
+      const combinedPts = combinedResponse(bands);
+      const dCombined   = pathFromPts(combinedPts);
+      curve.setAttribute('d', dCombined);
+      glow .setAttribute('d', dCombined);
+    }
+
     function render(){
+      renderNodes();
+      renderCurve();
       updateKnobPointers();
       updateReadouts();
-      const pts = magResponse(state.type, state.freq, state.Q, state.gain, parseInt(state.slope,10));
-      const d = pts.map((p,i)=> (i? 'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
-      curve.setAttribute('d', d);
-      glow.setAttribute('d', d);
-      // node position from current Gain/Freq (y uses desired gain directly)
-      const x = logMap(state.freq,FMIN,FMAX,X0,X1);
-      const y = MID - (clamp(state.gain,-DB,DB)/DB)*(Y1 - MID);
-      node.setAttribute('cx', x);
-      node.setAttribute('cy', y);
     }
-    render();
 
-    /* ---------- interactions ---------- */
-    // knobs
-    kGain.addEventListener('input', e=>{ state.gain=parseFloat(e.target.value); render(); });
-    kFreq.addEventListener('input', e=>{
-      state.freq=parseFloat(e.target.value); render();
+    /* ===== controls & selection ===== */
+    function syncKnobsToSelected(){
+      const b=bands[selected];
+      kGain.value=b.gain; kFreq.value=b.freq; kQ.value=b.Q;
+      filterType.value=b.type; slopeSel.value=b.slope||12;
+    }
+
+    kGain.addEventListener('input', e=>{ bands[selected].gain=parseFloat(e.target.value); schedule(); });
+    kFreq.addEventListener('input', e=>{ bands[selected].freq=parseFloat(e.target.value); schedule(); });
+    kQ  .addEventListener('input', e=>{ bands[selected].Q   =parseFloat(e.target.value); schedule(); });
+
+    filterType.addEventListener('change', e=>{ bands[selected].type=e.target.value; schedule(); });
+    slopeSel  .addEventListener('change', e=>{ bands[selected].slope=parseInt(e.target.value,10); schedule(); });
+
+    addBandBtn.addEventListener('click', ()=>{
+      if(bands.length>=MAX_BANDS) return;
+      const base=bands[selected];
+      const nf = clamp(base.freq*1.6, FMIN, FMAX);
+      bands.push({type:'peaking', gain:0, freq:nf, Q:1, slope:12});
+      selected=bands.length-1;
+      syncKnobsToSelected(); schedule();
     });
-    kQ.addEventListener('input', e=>{ state.Q=parseFloat(e.target.value); render(); });
 
-    filterType.addEventListener('change', e=>{ state.type=e.target.value; render(); });
-    slopeSel.addEventListener('change', e=>{ state.slope=parseInt(e.target.value,10); render(); });
+    removeBtn.addEventListener('click', ()=>{
+      if(bands.length<=1) return;
+      bands.splice(selected,1);
+      selected = Math.max(0, selected-1);
+      syncKnobsToSelected(); schedule();
+    });
 
     resetBtn.addEventListener('click', ()=>{
-      state.type='peaking'; state.gain=0; state.freq=1000; state.Q=1.0; state.slope=12;
-      kGain.value=state.gain; kFreq.value=state.freq; kQ.value=state.Q;
-      filterType.value=state.type; slopeSel.value=state.slope;
-      render();
+      bands = [
+        {type:'peaking', gain:0, freq:100,   Q:1, slope:12},
+        {type:'peaking', gain:0, freq:250,   Q:1, slope:12},
+        {type:'peaking', gain:0, freq:1000,  Q:1, slope:12},
+        {type:'peaking', gain:0, freq:4000,  Q:1, slope:12},
+        {type:'peaking', gain:0, freq:8000,  Q:1, slope:12},
+        {type:'peaking', gain:0, freq:14000, Q:1, slope:12},
+      ];
+      selected=2; syncKnobsToSelected(); schedule();
     });
 
-    // drag node: horizontal = freq (log), vertical = gain; Alt for Q
-    let dragging=false, lastY=0;
-    node.addEventListener('mousedown', (e)=>{ dragging=true; lastY=e.clientY; e.preventDefault(); });
-    window.addEventListener('mouseup', ()=> dragging=false);
-    window.addEventListener('mousemove', (e)=>{
-      if(!dragging) return;
+    /* ===== low-latency dragging (Pointer Events) ===== */
+    let draggingIdx = null;
+    let lastY = 0;
+
+    function onPointerDown(e){
+      const tgt = e.target;
+      if(!(tgt instanceof SVGCircleElement)) return;
+      const idx = +tgt.dataset.idx;
+      selected = idx; syncKnobsToSelected(); renderNodes();
+      draggingIdx = idx;
+      lastY = e.clientY;
+      tgt.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    }
+
+    function onPointerMove(e){
+      if(draggingIdx==null) return;
       const rect = svg.getBoundingClientRect();
       const x = clamp(e.clientX-rect.left, X0, X1);
       const y = clamp(e.clientY-rect.top,  Y0, Y1);
+
       if(e.altKey){
-        // adjust Q by vertical motion
         const dy = (lastY - e.clientY);
-        const k = 0.005; // sensitivity
-        state.Q = clamp(state.Q * Math.exp(k*dy), 0.2, 18);
-        kQ.value = state.Q;
+        const k = 0.005;
+        bands[draggingIdx].Q = clamp(bands[draggingIdx].Q * Math.exp(k*dy), 0.2, 18);
         lastY = e.clientY;
       }else{
-        // freq/gain
-        state.freq = clamp(invLogMap(x, X0, X1, FMIN, FMAX), FMIN, FMAX);
-        state.gain = clamp(((MID - y)/(Y1 - MID))*DB, -DB, DB);
-        kFreq.value = state.freq; kGain.value = state.gain;
+        bands[draggingIdx].freq = clamp(invLogMap(x, X0, X1, FMIN, FMAX), FMIN, FMAX);
+        bands[draggingIdx].gain = clamp(((MID - y)/(Y1 - MID))*DB, -DB, DB);
       }
-      render();
-    });
-    // wheel to change Q
+      if(draggingIdx===selected){
+        kGain.value=bands[selected].gain;
+        kFreq.value=bands[selected].freq;
+        kQ.value   =bands[selected].Q;
+      }
+      schedule();
+      e.preventDefault();
+    }
+
+    function onPointerUp(e){
+      if(draggingIdx==null) return;
+      try{ e.target.releasePointerCapture(e.pointerId); }catch{}
+      draggingIdx=null;
+      e.preventDefault();
+    }
+
+    nodesG.addEventListener('pointerdown', onPointerDown, {passive:false});
+    nodesG.addEventListener('pointermove', onPointerMove, {passive:false});
+    nodesG.addEventListener('pointerup',   onPointerUp,   {passive:false});
+    nodesG.addEventListener('pointercancel', onPointerUp, {passive:false});
+
+    // Wheel for Q (desktop)
     svg.addEventListener('wheel', (e)=>{
       const delta = Math.sign(e.deltaY);
-      state.Q = clamp(state.Q * (delta>0 ? 0.93 : 1/0.93), 0.2, 18);
-      kQ.value=state.Q; render();
+      bands[selected].Q = clamp(bands[selected].Q * (delta>0? 0.93 : 1/0.93), 0.2, 18);
+      kQ.value=bands[selected].Q; schedule();
       e.preventDefault();
     }, {passive:false});
 
-    // keep grid correct when the SVG size changes (responsive)
-    new ResizeObserver(()=>{
-      // recompute metrics from viewBox (fixed) so only need redraw grid once (already viewBox based)
-      render();
-    }).observe(svg);
+    /* ===== rAF scheduler to avoid jank ===== */
+    let rafId=null;
+    function schedule(){
+      if(rafId!=null) return;
+      rafId = requestAnimationFrame(()=>{ rafId=null; render(); });
+    }
+
+    /* ===== init ===== */
+    function init(){ syncKnobsToSelected(); render(); }
+    init();
   </script>
 </body>
 </html>
